@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 Annual Schedule</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --bg:#e0f4fb;
+  --surface:#fff;
+  --hdr:#b8e8f8;
+  --text:#1a2a3a;
+  --sub:#5a7080;
+  --border:#8ed4ee;
+  --day:#ffffff;
+  --day-ev:#d0eefa;
+  --today:#ffe8d0;
+  --sun:#e05050;
+  --sat:#1a6ea0;
+  --tb:#d0eef8;
+  --bbg:#f0faff;
+  --bb:#8ed4ee;
+  --mbg:#fff;
+  --sh:rgba(0,80,120,.15);
+  --accent:#f97316;
+  --accent-hov:#ea6c0a;
+}
+body.dark{
+  --bg:#0a1f2e;
+  --surface:#0f2d40;
+  --hdr:#0d2535;
+  --text:#d0eeff;
+  --sub:#5a8aa0;
+  --border:#1a4a60;
+  --day:#0f2d40;
+  --day-ev:#0d3a50;
+  --today:#3d2010;
+  --sun:#ff6060;
+  --sat:#40a0d0;
+  --tb:#0d2535;
+  --bbg:#0f2d40;
+  --bb:#1a4a60;
+  --mbg:#0f2d40;
+  --sh:rgba(0,0,0,.5);
+  --accent:#f97316;
+  --accent-hov:#ea6c0a;
+}
+body{font-family:'Malgun Gothic',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+
+/* ── Header ── */
+.header{display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:var(--surface);border-bottom:1px solid var(--border);gap:10px;flex-wrap:wrap;}
+.header-left{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.title-h1{font-size:36px;font-weight:700;text-align:center;flex:1;}
+.dark-toggle{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--sub);flex-shrink:0;}
+.tog{position:relative;width:42px;height:22px;cursor:pointer;}
+.tog input{opacity:0;width:0;height:0;}
+.sl{position:absolute;inset:0;background:#ccc;border-radius:11px;transition:.3s;}
+.sl:before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s;}
+input:checked+.sl{background:var(--accent);}
+input:checked+.sl:before{transform:translateX(20px);}
+
+/* ── 저장 버튼 ── */
+.save-btn{position:relative;}
+.save-main{display:flex;align-items:center;gap:5px;background:var(--accent);color:#fff;border:none;border-radius:8px;padding:7px 13px;cursor:pointer;font-size:13px;font-weight:600;}
+.save-main:hover{background:var(--accent-hov);}
+.save-dropdown{position:absolute;top:calc(100% + 4px);left:0;background:var(--mbg);border:1px solid var(--border);border-radius:10px;padding:5px;min-width:190px;box-shadow:0 4px 16px var(--sh);display:none;z-index:300;}
+.save-btn:hover .save-dropdown,.save-dropdown:hover{display:block;}
+.save-dropdown button{display:flex;align-items:center;gap:7px;width:100%;background:none;border:none;padding:7px 9px;cursor:pointer;border-radius:6px;color:var(--text);font-size:13px;}
+.save-dropdown button:hover{background:var(--hdr);}
+
+/* ── 분기 버튼 ── */
+.btn-quarter{background:#0ea5e9;color:#fff;border:none;border-radius:8px;padding:7px 14px;cursor:pointer;font-size:13px;font-weight:600;}
+.btn-quarter:hover{background:#0284c7;}
+.btn-quarter.active{background:#0369a1;}
+
+/* ── BG 배경색 버튼 ── */
+.bg-btn-wrap{position:relative;}
+.btn-bg{background:#fff;color:var(--accent);border:2px solid var(--accent);border-radius:8px;padding:6px 13px;cursor:pointer;font-size:13px;font-weight:600;}
+.btn-bg:hover{background:#fff3e0;}
+.bg-palette{position:absolute;top:calc(100% + 6px);left:0;background:#fff;border:1px solid #ddd;border-radius:14px;padding:14px;width:310px;box-shadow:0 6px 24px rgba(0,0,0,.18);display:none;z-index:400;}
+.bg-palette.show{display:block;}
+.bg-pal-title{font-size:12px;font-weight:700;color:#555;margin-bottom:10px;}
+.bg-pal-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:5px;margin-bottom:10px;}
+.bg-swatch{width:24px;height:24px;border-radius:5px;cursor:pointer;border:2px solid transparent;}
+.bg-swatch:hover{border-color:var(--accent);}
+.bg-swatch.sel{border-color:var(--accent);box-shadow:0 0 0 2px #fed7aa;}
+.bg-pal-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.bg-pal-label{font-size:12px;color:#666;}
+.bg-pal-reset{font-size:12px;padding:4px 12px;border:1px solid #ddd;background:#f5f5f5;border-radius:6px;cursor:pointer;color:#444;width:100%;}
+
+/* ── Nav ── */
+.nav{display:flex;align-items:center;gap:8px;padding:10px 20px;background:var(--surface);border-bottom:1px solid var(--border);flex-wrap:wrap;}
+.nav-arrow{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;border:none;cursor:pointer;font-size:16px;font-weight:700;}
+.nav-arrow:hover{background:var(--accent-hov);}
+.month-label{font-size:16px;font-weight:700;min-width:95px;}
+.month-tabs{display:flex;gap:3px;margin-left:12px;flex-wrap:wrap;}
+.mtab{padding:4px 10px;border-radius:14px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-size:12px;}
+.mtab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.mtab:hover:not(.active){background:var(--hdr);}
+
+/* ── Monthly ── */
+#monthlyView{display:block;}
+.cal-wrap{padding:0 20px 24px;overflow-x:auto;}
+.cal-grid{min-width:680px;border:1px solid var(--border);border-radius:0 0 10px 10px;overflow:hidden;}
+.cal-head{display:grid;grid-template-columns:repeat(7,1fr);background:var(--hdr);border-bottom:1px solid var(--border);}
+.cal-head div{text-align:center;padding:9px 0;font-size:13px;font-weight:600;color:var(--sub);}
+.cal-head .sun{color:var(--sun);}
+.cal-head .sat{color:var(--sat);}
+.cal-body{display:grid;grid-template-columns:repeat(7,1fr);}
+.cal-cell{min-height:110px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:5px;background:var(--day);cursor:pointer;transition:background .15s;}
+.cal-cell:nth-child(7n){border-right:none;}
+.cal-cell:hover{background:var(--hdr);}
+.cal-cell.today{background:var(--today);}
+.cal-cell.empty{background:var(--bg);cursor:default;}
+.cal-cell.has-ev{background:var(--day-ev);}
+.day-num{font-size:13px;font-weight:600;margin-bottom:3px;}
+.day-num.sn{color:var(--sun);}
+.day-num.st{color:var(--sat);}
+.ev-block{border-radius:5px;padding:3px 5px;margin-bottom:2px;cursor:pointer;line-height:1.45;}
+.ev-line{display:block;}
+
+/* ── Quarter ── */
+#quarterView{display:none;padding:16px 20px 30px;}
+.q-title{font-size:18px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.q-nav{display:flex;gap:6px;}
+.q-nav button{padding:4px 12px;border-radius:14px;border:1px solid var(--border);background:var(--surface);color:var(--text);cursor:pointer;font-size:12px;}
+.q-nav button.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+.q-nav button:hover:not(.active){background:var(--hdr);}
+.q-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.q-month{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.q-month-hdr{background:var(--hdr);padding:8px 12px;font-size:14px;font-weight:700;}
+.q-cal-head{display:grid;grid-template-columns:repeat(7,1fr);border-bottom:1px solid var(--border);}
+.q-cal-head div{text-align:center;padding:5px 0;font-size:11px;font-weight:600;color:var(--sub);}
+.q-cal-head .qsun{color:var(--sun);}
+.q-cal-head .qsat{color:var(--sat);}
+.q-cal-body{display:grid;grid-template-columns:repeat(7,1fr);}
+.q-cell{min-height:46px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);padding:3px 4px;background:#ffffff;transition:background .15s;position:relative;}
+body.dark .q-cell{background:#0f2d40;}
+.q-cell:nth-child(7n){border-right:none;}
+.q-cell.q-empty{background:var(--bg);cursor:default;}
+.q-cell.q-today{background:var(--today);}
+.q-cell.has-ev{background:#d0eefa;cursor:pointer;}
+body.dark .q-cell.has-ev{background:#0d3a50;}
+.q-cell.has-ev:hover{background:#b8e0f5;}
+.q-day-num{font-size:11px;font-weight:600;line-height:1.2;}
+.q-day-num.qsn{color:var(--sun);}
+.q-day-num.qst{color:var(--sat);}
+.q-stars{font-size:14px;line-height:1;letter-spacing:-1px;color:var(--accent);}
+
+/* ── Q Popup ── */
+.q-popup{position:fixed;background:var(--mbg);border:1px solid var(--border);border-radius:12px;padding:14px;min-width:210px;max-width:290px;box-shadow:0 6px 24px var(--sh);z-index:600;display:none;}
+.q-popup-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.q-popup-title{font-size:13px;font-weight:700;color:var(--text);}
+.q-popup-close{background:none;border:none;cursor:pointer;color:var(--sub);font-size:16px;line-height:1;padding:0 2px;}
+.q-popup-item{font-size:12px;padding:6px 8px;border-radius:6px;margin-bottom:4px;line-height:1.6;}
+
+/* ── Modal ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:center;justify-content:center;z-index:500;}
+.overlay.show{display:flex;}
+.modal{background:var(--mbg);border-radius:16px;padding:22px;width:540px;max-width:96vw;max-height:92vh;overflow-y:auto;box-shadow:0 8px 40px var(--sh);}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.modal-hdr h3{font-size:15px;font-weight:700;}
+.modal-close{background:none;border:none;font-size:18px;cursor:pointer;color:var(--sub);}
+.m-label{font-size:11px;color:var(--sub);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:block;}
+.line-editor{border:1px solid var(--border);border-radius:10px;overflow:visible;margin-bottom:8px;}
+.line-hdr{display:flex;align-items:center;gap:4px;padding:6px 8px;background:var(--tb);border-bottom:1px solid var(--border);border-radius:10px 10px 0 0;flex-wrap:wrap;}
+.line-num{font-size:11px;font-weight:700;color:var(--accent);min-width:28px;}
+.fb{height:24px;min-width:24px;padding:0 5px;border:1px solid var(--bb);background:var(--bbg);border-radius:4px;cursor:pointer;font-size:12px;color:var(--text);display:flex;align-items:center;justify-content:center;user-select:none;}
+.fb.on{background:var(--accent);color:#fff;border-color:var(--accent);}
+.fsep{width:1px;height:16px;background:var(--border);margin:0 2px;}
+.fsz{width:38px;height:24px;border:1px solid var(--bb);background:var(--bbg);border-radius:4px;text-align:center;color:var(--text);font-size:12px;}
+.fcb{display:flex;align-items:center;gap:3px;height:24px;padding:0 6px;border:1px solid var(--bb);background:var(--bbg);border-radius:4px;cursor:pointer;font-size:11px;color:var(--text);user-select:none;}
+.cbar{display:block;height:3px;border-radius:1px;margin-top:1px;}
+.pal-panel{background:var(--mbg);border:1px solid var(--border);border-radius:10px;padding:10px;margin-top:4px;display:none;}
+.pal-panel.show{display:block;}
+.pal-title{font-size:11px;font-weight:700;color:var(--sub);margin-bottom:7px;}
+.pal-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-bottom:8px;}
+.psw{width:22px;height:22px;border-radius:5px;cursor:pointer;border:2px solid transparent;}
+.psw:hover{border-color:var(--accent);}
+.psw.sel{border-color:var(--accent);box-shadow:0 0 0 2px #fed7aa;}
+.pal-reset{font-size:11px;padding:3px 10px;border:1px solid var(--bb);background:var(--bbg);border-radius:5px;cursor:pointer;color:var(--text);}
+.line-input{width:100%;border:none;border-radius:0 0 10px 10px;padding:8px 10px;font-size:13px;background:var(--bbg);color:var(--text);font-family:inherit;outline:none;}
+.line-input::placeholder{color:var(--sub);}
+.line-actions{display:flex;gap:6px;margin-bottom:14px;}
+.btn-add-line{padding:5px 12px;background:#e8f4ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:6px;cursor:pointer;font-size:12px;}
+.btn-rm-line{padding:5px 10px;background:#fff0f0;color:#c0392b;border:1px solid #fca5a5;border-radius:6px;cursor:pointer;font-size:12px;}
+.blk-pal-wrap{margin-bottom:14px;}
+.blk-pal-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;}
+.bpsw{width:24px;height:24px;border-radius:5px;cursor:pointer;border:2px solid transparent;}
+.bpsw:hover{border-color:var(--accent);}
+.bpsw.sel{border-color:var(--accent);box-shadow:0 0 0 2px #fed7aa;}
+.modal-btns{display:flex;gap:7px;justify-content:flex-end;}
+.btn-del{padding:7px 14px;background:#e05050;color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:13px;}
+.btn-cancel{padding:7px 16px;border:1px solid var(--border);background:var(--bbg);border-radius:7px;cursor:pointer;font-size:13px;color:var(--text);}
+.btn-save{padding:7px 18px;background:var(--accent);color:#fff;border:none;border-radius:7px;cursor:pointer;font-size:13px;font-weight:700;}
+.btn-save:hover{background:var(--accent-hov);}
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <div class="save-btn">
+      <button class="save-main">💾 저장 ▾</button>
+      <div class="save-dropdown">
+        <button onclick="saveJSON()">📁 JSON 파일 저장</button>
+        <button onclick="loadJSON()">📂 JSON 파일 불러오기</button>
+        <button onclick="window.print()">📄 PDF 저장</button>
+        <button onclick="downloadHTML()">⬇️ index.html 다운로드</button>
+      </div>
+    </div>
+    <button class="btn-quarter" id="quarterBtn" onclick="toggleQuarter()">📊 분기별 일정</button>
+    <div class="bg-btn-wrap" id="bgBtnWrap">
+      <button class="btn-bg" onclick="toggleBgPalette()">🎨 BG 배경색상</button>
+      <div class="bg-palette" id="bgPalette">
+        <div class="bg-pal-title">배경 색상 선택</div>
+        <div class="bg-pal-grid" id="bgPalGrid"></div>
+        <div class="bg-pal-row">
+          <span class="bg-pal-label">직접 입력:</span>
+          <input type="color" id="bgCustomColor" value="#e0f4fb" oninput="applyBgColor(this.value)">
+        </div>
+        <button class="bg-pal-reset" onclick="applyBgColor('#e0f4fb')">기본값으로</button>
+      </div>
+    </div>
+  </div>
+  <h1 class="title-h1">2026 Annual Schedule</h1>
+  <div class="dark-toggle">
+    <label class="tog"><input type="checkbox" id="darkToggle" onchange="toggleDark()"><span class="sl"></span></label>
+    <span id="darkLabel">라이트</span>
+  </div>
+</div>
+
+<!-- Nav -->
+<div class="nav" id="mainNav">
+  <button class="nav-arrow" onclick="changeMonth(-1)">‹</button>
+  <span class="month-label" id="monthLabel"></span>
+  <button class="nav-arrow" onclick="changeMonth(1)">›</button>
+  <div class="month-tabs" id="monthTabs"></div>
+</div>
+
+<!-- Monthly View -->
+<div id="monthlyView">
+  <div class="cal-wrap">
+    <div class="cal-grid">
+      <div class="cal-head">
+        <div class="sun">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div class="sat">토</div>
+      </div>
+      <div class="cal-body" id="calBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Quarter View -->
+<div id="quarterView">
+  <div class="q-title">
+    <span id="qTitle"></span>
+    <div class="q-nav" id="qNav"></div>
+  </div>
+  <div class="q-grid" id="qGrid"></div>
+</div>
+
+<!-- Q Popup -->
+<div class="q-popup" id="qPopup">
+  <div class="q-popup-hdr">
+    <span class="q-popup-title" id="qPopupTitle"></span>
+    <button class="q-popup-close" id="qPopupCloseBtn">✕</button>
+  </div>
+  <div id="qPopupContent"></div>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="modal-hdr">
+      <h3 id="modalTitle">일정 추가</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <span class="m-label">줄별 내용 및 서식</span>
+    <div id="lineEditors"></div>
+    <div class="line-actions">
+      <button class="btn-add-line" onclick="addLine()">+ 줄 추가</button>
+      <button class="btn-rm-line" onclick="removeLine()">− 마지막 줄 삭제</button>
+    </div>
+    <span class="m-label">블록 배경 색상</span>
+    <div class="blk-pal-wrap"><div class="blk-pal-grid" id="blkPalGrid"></div></div>
+    <div class="modal-btns">
+      <button class="btn-del" id="delBtn" onclick="deleteEvent()" style="display:none">삭제</button>
+      <button class="btn-cancel" onclick="closeModal()">취소</button>
+      <button class="btn-save" onclick="saveEvent()">저장</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept=".json" style="display:none" onchange="loadFromFile(event)">
+
+<script>
+/* ── 상태 ── */
+var curYear=2026, curMonth=5, isDark=false, isQuarterView=false, curQuarter=1;
+var events={}, currentKey='', editIdx=-1, lines=[], curBlkColor='#dbeafe';
+var openPalPanel=null, currentBgColor='#e0f4fb';
+
+var MONTHS=['1월','2월','3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+var QUARTERS=[[0,1,2],[3,4,5],[6,7,8],[9,10,11]];
+var TCOLS=[
+  '#000000','#434343','#666666','#999999','#b7b7b7','#cccccc','#d9d9d9','#efefef','#f3f3f3','#ffffff',
+  '#ff0000','#ff4400','#ff9900','#ffff00','#00ff00','#00ffff','#4a86e8','#0000ff','#9900ff','#ff00ff',
+  '#e06666','#f6b26b','#ffd966','#93c47d','#76a5af','#6fa8dc','#8e7cc3','#c27ba0','#ea9999','#f9cb9c',
+  '#cc0000','#e69138','#f1c232','#6aa84f','#45818e','#3d85c8','#674ea7','#a64d79','#990000','#b45f06'
+];
+var BLKCOLS=[
+  '#ffffff','#f8f9fa','#f1f3f4','#e8eaed','#dadce0','#bdc1c6','#9aa0a6','#80868b','#5f6368','#202124',
+  '#fce8e6','#fde8cc','#fef3cc','#e6f4ea','#e8f0fe','#f3e8fd','#fce8f3','#fff3e0','#e0f7fa','#f9fbe7',
+  '#f28b82','#fbbc04','#fff475','#ccff90','#a8c7fa','#d7aefb','#fdcfe8','#ffb3b3','#80deea','#dcedc8',
+  '#dbeafe','#dcfce7','#fef3c7','#fce7f3','#ffe4e1','#e0f2fe','#f3e8ff','#ffedd5','#ecfdf5','#fdf4ff'
+];
+var BG_COLORS=[
+  '#ffffff','#f8f9fa','#f1f3f4','#e8eaed','#dadce0','#bdc1c6','#9aa0a6','#5f6368','#3c4043','#202124',
+  '#e0f4fb','#cceeff','#b3e5fc','#81d4fa','#4fc3f7','#dbeafe','#bfdbfe','#93c5fd','#60a5fa','#3b82f6',
+  '#f0fdf4','#dcfce7','#bbf7d0','#86efac','#4ade80','#ecfdf5','#d1fae5','#a7f3d0','#6ee7b7','#34d399',
+  '#fffbeb','#fef3c7','#fde68a','#fcd34d','#fbbf24','#fff7ed','#ffedd5','#fed7aa','#fdba74','#fb923c',
+  '#fdf4ff','#f3e8ff','#e9d5ff','#d8b4fe','#c084fc','#fce7f3','#fbcfe8','#f9a8d4','#f472b6','#ec4899',
+  '#fff8f0','#ffecd2','#ffdab9','#ffc8a0','#ffb347','#fef9ee','#fef0d0','#fde8b0','#fbd990','#f9ca70'
+];
+
+/* ── URL 해시 영구저장 ── */
+function persistToHash(){
+  try{
+    var data={events:events,year:curYear,month:curMonth,bgColor:currentBgColor};
+    var encoded=btoa(encodeURIComponent(JSON.stringify(data)));
+    history.replaceState(null,'','#'+encoded);
+  }catch(e){}
+}
+function loadFromHash(){
+  try{
+    var h=location.hash.slice(1);
+    if(!h) return false;
+    var d=JSON.parse(decodeURIComponent(atob(h)));
+    if(d && d.events){
+      events=d.events; curYear=d.year||2026; curMonth=d.month||5;
+      if(d.bgColor){ currentBgColor=d.bgColor; document.body.style.background=d.bgColor; }
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
+/* ── JSON 저장/불러오기 ── */
+function saveJSON(){
+  try{
+    var blob=new Blob([JSON.stringify({events:events,year:curYear,month:curMonth},null,2)],{type:'application/json'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a'); a.href=url; a.download='schedule_2026.json';
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){URL.revokeObjectURL(url);document.body.removeChild(a);},500);
+  }catch(e){alert('저장 실패: '+e.message);}
+}
+function loadJSON(){ var fi=document.getElementById('fileInput'); fi.value=''; fi.click(); }
+function loadFromFile(e){
+  var f=e.target.files[0]; if(!f) return;
+  var r=new FileReader();
+  r.onload=function(ev){
+    try{
+      var d=JSON.parse(ev.target.result);
+      if(!d.events) throw new Error('올바른 파일이 아닙니다.');
+      events=d.events; curYear=d.year||2026; curMonth=d.month||5;
+      persistToHash();
+      if(isQuarterView) renderQuarter(); else render();
+      alert('✅ 불러오기 완료!');
+    }catch(err){ alert('❌ 파일 오류: '+err.message); }
+  };
+  r.readAsText(f);
+}
+
+/* ── index.html 다운로드 ── */
+function downloadHTML(){
+  try{
+    var html='<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+    var blob=new Blob([html],{type:'text/html;charset=utf-8'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a'); a.href=url; a.download='index.html';
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){URL.revokeObjectURL(url);document.body.removeChild(a);},500);
+  }catch(e){ alert('다운로드 실패: '+e.message); }
+}
+
+/* ── BG 배경색 팔레트 ── */
+function initBgPalette(){
+  var grid=document.getElementById('bgPalGrid');
+  BG_COLORS.forEach(function(c){
+    var s=document.createElement('div'); s.className='bg-swatch'; s.style.background=c;
+    if(c==='#ffffff'||c==='#f8f9fa') s.style.outline='1px solid #ddd';
+    if(c===currentBgColor) s.classList.add('sel');
+    s.addEventListener('click',function(){ applyBgColor(c); });
+    grid.appendChild(s);
+  });
+  document.addEventListener('click',function(e){
+    if(!e.target.closest('#bgBtnWrap')) closeBgPalette();
+  });
+}
+function toggleBgPalette(){
+  document.getElementById('bgPalette').classList.toggle('show');
+}
+function closeBgPalette(){
+  document.getElementById('bgPalette').classList.remove('show');
+}
+function applyBgColor(color){
+  currentBgColor=color;
+  document.body.style.background=color;
+  document.querySelectorAll('.bg-swatch').forEach(function(s){
+    s.classList.remove('sel');
+    if(s.style.background===color||s.style.background===hexToRgb(color)) s.classList.add('sel');
+  });
+  document.getElementById('bgCustomColor').value=color.length===7?color:'#e0f4fb';
+  persistToHash();
+}
+function hexToRgb(hex){
+  if(hex.length!==7) return hex;
+  var r=parseInt(hex.slice(1,3),16);
+  var g=parseInt(hex.slice(3,5),16);
+  var b=parseInt(hex.slice(5,7),16);
+  return 'rgb('+r+', '+g+', '+b+')';
+}
+
+/* ── 기본값 ── */
+function defLine(){ return {text:'',bold:false,italic:false,underline:false,size:13,textColor:null,bgColor:null}; }
+
+/* ── 분기별 보기 ── */
+function toggleQuarter(){
+  isQuarterView=!isQuarterView;
+  document.getElementById('quarterBtn').classList.toggle('active',isQuarterView);
+  document.getElementById('monthlyView').style.display=isQuarterView?'none':'block';
+  document.getElementById('quarterView').style.display=isQuarterView?'block':'none';
+  document.getElementById('mainNav').style.display=isQuarterView?'none':'flex';
+  document.getElementById('quarterBtn').textContent=isQuarterView?'📅 월별 일정':'📊 분기별 일정';
+  if(isQuarterView){ curQuarter=Math.floor(curMonth/3); renderQuarter(); }
+}
+function renderQuarter(){
+  var qn=document.getElementById('qNav'); qn.innerHTML='';
+  var qLabels=['1분기','2분기','3분기','4분기'];
+  for(var qi=0;qi<4;qi++){
+    (function(idx){
+      var b=document.createElement('button'); b.textContent=qLabels[idx];
+      if(idx===curQuarter) b.classList.add('active');
+      b.onclick=function(){ curQuarter=idx; renderQuarter(); };
+      qn.appendChild(b);
+    })(qi);
+  }
+  var qm=QUARTERS[curQuarter];
+  document.getElementById('qTitle').textContent=curYear+'년 '+(curQuarter+1)+'분기 ('+MONTHS[qm[0]]+'~'+MONTHS[qm[2]]+')';
+  var grid=document.getElementById('qGrid'); grid.innerHTML='';
+  var today=new Date();
+  for(var mi=0;mi<3;mi++){
+    var m=qm[mi];
+    var wrap=document.createElement('div'); wrap.className='q-month';
+    var mhdr=document.createElement('div'); mhdr.className='q-month-hdr';
+    mhdr.textContent=curYear+'년 '+MONTHS[m]; wrap.appendChild(mhdr);
+    var ch=document.createElement('div'); ch.className='q-cal-head';
+    ['일','월','화','수','목','금','토'].forEach(function(d,di){
+      var dv=document.createElement('div'); dv.textContent=d;
+      if(di===0) dv.classList.add('qsun');
+      if(di===6) dv.classList.add('qsat');
+      ch.appendChild(dv);
+    });
+    wrap.appendChild(ch);
+    var cb=document.createElement('div'); cb.className='q-cal-body';
+    var days=new Date(curYear,m+1,0).getDate();
+    var first=new Date(curYear,m,1).getDay();
+    for(var ei=0;ei<first;ei++){
+      var ec=document.createElement('div'); ec.className='q-cell q-empty'; cb.appendChild(ec);
+    }
+    for(var d=1;d<=days;d++){
+      (function(day){
+        var dow=(first+day-1)%7;
+        var key=curYear+'-'+(m+1)+'-'+day;
+        var cell=document.createElement('div'); cell.className='q-cell';
+        if(today.getFullYear()===curYear&&today.getMonth()===m&&today.getDate()===day) cell.classList.add('q-today');
+        var dn=document.createElement('div'); dn.className='q-day-num'+(dow===0?' qsn':dow===6?' qst':'');
+        dn.textContent=day; cell.appendChild(dn);
+        var evList=events[key]||[];
+        if(evList.length>0){
+          cell.classList.add('has-ev');
+          var stars=document.createElement('div'); stars.className='q-stars';
+          stars.textContent='★'.repeat(Math.min(evList.length,3));
+          cell.appendChild(stars);
+          (function(k){ cell.addEventListener('click',function(ev){ showQPopup(k,ev); }); })(key);
+        }
+        cb.appendChild(cell);
+      })(d);
+    }
+    wrap.appendChild(cb); grid.appendChild(wrap);
+  }
+}
+
+/* ── Q 팝업 ── */
+document.getElementById('qPopupCloseBtn').addEventListener('click',function(e){
+  e.stopPropagation(); closeQPopup();
+});
+document.addEventListener('click',function(e){
+  var popup=document.getElementById('qPopup');
+  if(popup.style.display==='block'&&!e.target.closest('#qPopup')) closeQPopup();
+});
+function showQPopup(key,e){
+  e.stopPropagation();
+  var evList=events[key]||[]; if(!evList.length) return;
+  var parts=key.split('-');
+  document.getElementById('qPopupTitle').textContent='📅 '+parts[0]+'년 '+parts[1]+'월 '+parts[2]+'일';
+  var cont=document.getElementById('qPopupContent'); cont.innerHTML='';
+  for(var i=0;i<evList.length;i++){
+    var ev=evList[i];
+    var item=document.createElement('div'); item.className='q-popup-item';
+    item.style.background=ev.blkColor||'#dbeafe';
+    var html='';
+    for(var j=0;j<ev.lines.length;j++){
+      var ln=ev.lines[j]; if(!ln.text) continue;
+      html+='<span style="font-size:'+(ln.size||13)+'px;font-weight:'+(ln.bold?700:400)+';font-style:'+(ln.italic?'italic':'normal')+';'+(ln.textColor?'color:'+ln.textColor+';':'')+'">'+ln.text+'</span><br>';
+    }
+    item.innerHTML=html; cont.appendChild(item);
+  }
+  var popup=document.getElementById('qPopup');
+  popup.style.display='block';
+  var pr=popup.getBoundingClientRect();
+  var px=e.clientX+12, py=e.clientY+12;
+  if(px+pr.width>window.innerWidth) px=e.clientX-pr.width-12;
+  if(py+pr.height>window.innerHeight) py=e.clientY-pr.height-12;
+  popup.style.left=px+'px'; popup.style.top=py+'px';
+}
+function closeQPopup(){ document.getElementById('qPopup').style.display='none'; }
+
+/* ── 블록 팔레트 ── */
+function buildBlkPalette(){
+  var g=document.getElementById('blkPalGrid'); g.innerHTML='';
+  BLKCOLS.forEach(function(c){
+    var s=document.createElement('div'); s.className='bpsw'; s.style.background=c;
+    if(c==='#ffffff'||c==='#f8f9fa'||c==='#f1f3f4') s.style.outline='1px solid #ddd';
+    if(c===curBlkColor) s.classList.add('sel');
+    s.addEventListener('click',function(){
+      curBlkColor=c;
+      document.querySelectorAll('.bpsw').forEach(function(x){ x.classList.remove('sel'); });
+      s.classList.add('sel');
+    });
+    g.appendChild(s);
+  });
+}
+function closePalPanels(){
+  document.querySelectorAll('.pal-panel').forEach(function(p){ p.classList.remove('show'); });
+  openPalPanel=null;
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('.fcb')&&!e.target.closest('.pal-panel')) closePalPanels();
+});
+function makePalPanel(colors,title,onPick,onReset){
+  var panel=document.createElement('div'); panel.className='pal-panel';
+  var t=document.createElement('div'); t.className='pal-title'; t.textContent=title; panel.appendChild(t);
+  var g=document.createElement('div'); g.className='pal-grid';
+  colors.forEach(function(c){
+    var s=document.createElement('div'); s.className='psw'; s.style.background=c;
+    if(c==='#ffffff') s.style.outline='1px solid #ddd';
+    s.addEventListener('click',function(e2){ e2.stopPropagation(); onPick(c); closePalPanels(); });
+    g.appendChild(s);
+  });
+  panel.appendChild(g);
+  var rb=document.createElement('button'); rb.className='pal-reset'; rb.textContent='기본값';
+  rb.addEventListener('click',function(e2){ e2.stopPropagation(); onReset(); closePalPanels(); });
+  panel.appendChild(rb); return panel;
+}
+
+/* ── 줄 에디터 ── */
+function buildLineEditors(){
+  var cont=document.getElementById('lineEditors'); cont.innerHTML='';
+  for(var i=0;i<lines.length;i++){
+    (function(ln,idx){
+      var wrap=document.createElement('div'); wrap.className='line-editor';
+      var hdr=document.createElement('div'); hdr.className='line-hdr';
+      var num=document.createElement('span'); num.className='line-num'; num.textContent='줄 '+(idx+1); hdr.appendChild(num);
+      var inp=null;
+      function refresh(){
+        if(!inp) return;
+        inp.style.fontWeight=ln.bold?'700':'400';
+        inp.style.fontStyle=ln.italic?'italic':'normal';
+        inp.style.textDecoration=ln.underline?'underline':'none';
+        inp.style.fontSize=(ln.size||13)+'px';
+        inp.style.color=ln.textColor||'';
+        inp.style.background=ln.bgColor||'';
+      }
+      var bb=mkBtn('<b>B</b>',ln.bold,function(){ln.bold=!ln.bold;bb.classList.toggle('on',ln.bold);refresh();});
+      var ib=mkBtn('<i>I</i>',ln.italic,function(){ln.italic=!ln.italic;ib.classList.toggle('on',ln.italic);refresh();});
+      var ub=mkBtn('<u>U</u>',ln.underline,function(){ln.underline=!ln.underline;ub.classList.toggle('on',ln.underline);refresh();});
+      hdr.appendChild(bb);hdr.appendChild(ib);hdr.appendChild(ub);hdr.appendChild(sep());
+      var szi=document.createElement('input');szi.type='number';szi.className='fsz';szi.value=ln.size||13;szi.min=8;szi.max=30;
+      szi.addEventListener('change',function(){ln.size=parseInt(szi.value)||13;refresh();});
+      var smb=mkBtn('−',false,function(){ln.size=Math.max(8,(ln.size||13)-1);szi.value=ln.size;refresh();});
+      var spb=mkBtn('+',false,function(){ln.size=Math.min(30,(ln.size||13)+1);szi.value=ln.size;refresh();});
+      hdr.appendChild(smb);hdr.appendChild(szi);hdr.appendChild(spb);hdr.appendChild(sep());
+      /* 글자색 */
+      var tcBar=document.createElement('span');tcBar.className='cbar';tcBar.style.cssText='width:13px;background:'+(ln.textColor||'#333')+';';
+      var tcA=document.createElement('span');tcA.textContent='A';tcA.style.fontSize='12px';
+      var tcInd=document.createElement('div');tcInd.style.cssText='display:flex;flex-direction:column;align-items:center;gap:1px;';
+      tcInd.appendChild(tcA);tcInd.appendChild(tcBar);
+      var tcBtn=document.createElement('div');tcBtn.className='fcb';tcBtn.appendChild(tcInd);tcBtn.appendChild(arrowSpan());
+      var tcp=makePalPanel(TCOLS,'🎨 글자 색상',
+        function(c){ln.textColor=c;tcBar.style.background=c;refresh();},
+        function(){ln.textColor=null;tcBar.style.background='#333';refresh();}
+      );
+      tcBtn.appendChild(tcp);
+      tcBtn.addEventListener('click',function(e){e.stopPropagation();if(openPalPanel===tcp){closePalPanels();}else{closePalPanels();tcp.classList.add('show');openPalPanel=tcp;}});
+      hdr.appendChild(tcBtn);
+      /* 배경색 */
+      var bgBar=document.createElement('span');bgBar.className='cbar';bgBar.style.cssText='width:20px;background:'+(ln.bgColor||'transparent')+';border:'+(ln.bgColor?'none':'1px solid #aaa')+';';
+      var bgLbl=document.createElement('span');bgLbl.textContent='배경';bgLbl.style.fontSize='10px';
+      var bgInd=document.createElement('div');bgInd.style.cssText='display:flex;flex-direction:column;align-items:center;gap:1px;';
+      bgInd.appendChild(bgLbl);bgInd.appendChild(bgBar);
+      var bgBtn=document.createElement('div');bgBtn.className='fcb';bgBtn.appendChild(bgInd);bgBtn.appendChild(arrowSpan());
+      var bgp=makePalPanel(BLKCOLS,'🎨 배경 색상',
+        function(c){ln.bgColor=c;bgBar.style.background=c;bgBar.style.border='none';refresh();},
+        function(){ln.bgColor=null;bgBar.style.background='transparent';bgBar.style.border='1px solid #aaa';refresh();}
+      );
+      bgBtn.appendChild(bgp);
+      bgBtn.addEventListener('click',function(e){e.stopPropagation();if(openPalPanel===bgp){closePalPanels();}else{closePalPanels();bgp.classList.add('show');openPalPanel=bgp;}});
+      hdr.appendChild(bgBtn);
+      wrap.appendChild(hdr);
+      inp=document.createElement('input');inp.type='text';inp.className='line-input';
+      inp.placeholder=(idx+1)+'번째 줄 내용';inp.value=ln.text;
+      inp.addEventListener('input',function(){ln.text=inp.value;});
+      refresh(); wrap.appendChild(inp); cont.appendChild(wrap);
+    })(lines[i],i);
+  }
+}
+function mkBtn(html,active,cb){
+  var b=document.createElement('button');b.className='fb'+(active?' on':'');b.innerHTML=html;
+  b.addEventListener('click',function(e){e.stopPropagation();cb();});return b;
+}
+function sep(){var d=document.createElement('div');d.className='fsep';return d;}
+function arrowSpan(){var s=document.createElement('span');s.textContent='▾';s.style.fontSize='10px';return s;}
+function addLine(){if(lines.length>=6)return;lines.push(defLine());buildLineEditors();}
+function removeLine(){if(lines.length<=1)return;lines.pop();buildLineEditors();}
+
+/* ── 모달 ── */
+function openModal(key,idx){
+  currentKey=key;editIdx=idx;
+  document.getElementById('modalTitle').textContent=(idx===-1?'일정 추가 — ':'일정 수정 — ')+key;
+  var ev=(idx>=0&&events[key])?events[key][idx]:null;
+  lines=ev?ev.lines.map(function(l){return Object.assign({},l);}):[defLine()];
+  curBlkColor=ev?ev.blkColor:'#dbeafe';
+  buildLineEditors();buildBlkPalette();
+  document.getElementById('delBtn').style.display=idx>=0?'block':'none';
+  document.getElementById('overlay').classList.add('show');
+  setTimeout(function(){var f=document.querySelector('.line-input');if(f)f.focus();},60);
+}
+function closeModal(){document.getElementById('overlay').classList.remove('show');closePalPanels();}
+function saveEvent(){
+  var filled=lines.filter(function(l){return l.text.trim();});
+  if(!filled.length)return;
+  var ev={lines:lines.map(function(l){return Object.assign({},l);}),blkColor:curBlkColor};
+  if(!events[currentKey])events[currentKey]=[];
+  if(editIdx>=0)events[currentKey][editIdx]=ev;else events[currentKey].push(ev);
+  var cell=document.querySelector('.cal-cell[data-key="'+currentKey+'"]');
+  if(cell)renderCell(cell,currentKey);
+  persistToHash();
+  if(isQuarterView)renderQuarter();
+  closeModal();
+}
+function deleteEvent(){
+  if(editIdx>=0&&events[currentKey])events[currentKey].splice(editIdx,1);
+  var cell=document.querySelector('.cal-cell[data-key="'+currentKey+'"]');
+  if(cell)renderCell(cell,currentKey);
+  persistToHash();
+  if(isQuarterView)renderQuarter();
+  closeModal();
+}
+
+/* ── 월별 달력 ── */
+function renderCell(cell,key){
+  var ew=cell.querySelector('.ev-wrap'); if(ew)ew.remove();
+  var newEw=document.createElement('div'); newEw.className='ev-wrap';
+  var evList=events[key]||[];
+  cell.classList.toggle('has-ev',evList.length>0);
+  for(var i=0;i<evList.length;i++){
+    (function(ev,idx){
+      var blk=document.createElement('div');blk.className='ev-block';blk.style.background=ev.blkColor||'#dbeafe';
+      for(var j=0;j<ev.lines.length;j++){
+        var ln=ev.lines[j]; if(!ln.text) continue;
+        var sp=document.createElement('span');sp.className='ev-line';sp.textContent=ln.text;
+        sp.style.fontWeight=ln.bold?'700':'400';
+        sp.style.fontStyle=ln.italic?'italic':'normal';
+        sp.style.textDecoration=ln.underline?'underline':'none';
+        sp.style.fontSize=(ln.size||13)+'px';
+        if(ln.textColor)sp.style.color=ln.textColor;
+        if(ln.bgColor)sp.style.background=ln.bgColor;
+        blk.appendChild(sp);
+      }
+      blk.addEventListener('click',function(e){e.stopPropagation();openModal(key,idx);});
+      newEw.appendChild(blk);
+    })(evList[i],i);
+  }
+  cell.appendChild(newEw);
+}
+function render(){
+  document.getElementById('monthLabel').textContent=curYear+'년 '+MONTHS[curMonth];
+  var tc=document.getElementById('monthTabs');tc.innerHTML='';
+  for(var i=0;i<12;i++){
+    (function(idx){
+      var b=document.createElement('button');b.className='mtab'+(idx===curMonth?' active':'');
+      b.textContent=MONTHS[idx];
+      b.addEventListener('click',function(){curMonth=idx;render();});
+      tc.appendChild(b);
+    })(i);
+  }
+  var body=document.getElementById('calBody');body.innerHTML='';
+  var days=new Date(curYear,curMonth+1,0).getDate();
+  var first=new Date(curYear,curMonth,1).getDay();
+  var today=new Date();
+  for(var i=0;i<first;i++){var ec=document.createElement('div');ec.className='cal-cell empty';body.appendChild(ec);}
+  for(var d=1;d<=days;d++){
+    (function(day){
+      var dow=(first+day-1)%7;
+      var key=curYear+'-'+(curMonth+1)+'-'+day;
+      var cell=document.createElement('div');cell.className='cal-cell';cell.dataset.key=key;
+      if(today.getFullYear()===curYear&&today.getMonth()===curMonth&&today.getDate()===day)cell.classList.add('today');
+      var dn=document.createElement('div');dn.className='day-num'+(dow===0?' sn':dow===6?' st':'');
+      dn.textContent=day;cell.appendChild(dn);
+      renderCell(cell,key);
+      cell.addEventListener('click',function(e){if(e.target.closest('.ev-block'))return;openModal(key,-1);});
+      body.appendChild(cell);
+    })(d);
+  }
+}
+function changeMonth(d){curMonth+=d;if(curMonth<0){curMonth=11;curYear--;}if(curMonth>11){curMonth=0;curYear++;}render();}
+function toggleDark(){isDark=!isDark;document.body.classList.toggle('dark',isDark);document.getElementById('darkLabel').textContent=isDark?'다크':'라이트';}
+
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape')closeModal();
+  if(e.key==='Enter'&&e.ctrlKey&&document.getElementById('overlay').classList.contains('show'))saveEvent();
+});
+
+/* ── 초기화 ── */
+if(!loadFromHash()){}
+initBgPalette();
+render();
+</script>
+</body>
+</html>
